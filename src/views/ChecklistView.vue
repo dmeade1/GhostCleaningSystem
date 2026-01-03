@@ -10,7 +10,12 @@
           Back to Jobs
         </button>
         
-        <h2 class="text-2xl font-bold text-white mb-2">{{ currentJob?.yacht?.name }}</h2>
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-2xl font-bold text-white">{{ currentJob?.yacht?.name }}</h2>
+          <span v-if="store.user?.team_type" :class="teamBadgeClass" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
+            {{ store.user.team_type }}
+          </span>
+        </div>
         <p class="text-slate-400">{{ currentJob?.yacht?.model }}</p>
       </div>
 
@@ -74,6 +79,13 @@ const completedTasks = ref(new Set())
 
 const currentJob = computed(() => store.currentJob)
 
+const teamBadgeClass = computed(() => {
+  const teamType = store.user?.team_type
+  if (teamType === 'interior') return 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
+  if (teamType === 'exterior') return 'bg-blue-500/20 text-blue-300 border border-blue-500/50'
+  return 'bg-slate-500/20 text-slate-300 border border-slate-500/50'
+})
+
 const allTasksCompleted = computed(() => {
   const totalTasks = zones.value.reduce((sum, zone) => sum + (zone.tasks?.length || 0), 0)
   return totalTasks > 0 && completedTasks.value.size === totalTasks
@@ -99,14 +111,24 @@ async function loadChecklist() {
 
     if (zonesError) throw zonesError
 
+    // Filter zones by team type
+    const userTeamType = store.user?.team_type || 'both'
+    let filteredZones = zonesData
+    
+    if (userTeamType !== 'both') {
+      filteredZones = zonesData.filter(zone => 
+        zone.zone_type === userTeamType || zone.zone_type === 'both'
+      )
+    }
+
     // Sort tasks within each zone
-    zonesData.forEach(zone => {
+    filteredZones.forEach(zone => {
       if (zone.tasks) {
         zone.tasks.sort((a, b) => a.order_index - b.order_index)
       }
     })
 
-    zones.value = zonesData
+    zones.value = filteredZones
 
     // Load completed tasks
     const { data: completionsData, error: completionsError } = await supabase

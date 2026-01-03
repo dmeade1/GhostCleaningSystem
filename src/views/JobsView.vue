@@ -3,7 +3,12 @@
     <div class="container mx-auto max-w-2xl">
       <!-- Page Header -->
       <div class="mb-6 pt-4">
-        <h2 class="text-2xl font-bold text-white mb-2">Today's Jobs</h2>
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-2xl font-bold text-white">Today's Jobs</h2>
+          <span v-if="store.user?.team_type" :class="teamBadgeClass" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
+            {{ store.user.team_type }}
+          </span>
+        </div>
         <p class="text-slate-400">{{ formattedDate }}</p>
       </div>
 
@@ -100,6 +105,13 @@ const formattedDate = computed(() => {
     month: 'long', 
     day: 'numeric' 
   })
+})
+
+const teamBadgeClass = computed(() => {
+  const teamType = store.user?.team_type
+  if (teamType === 'interior') return 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
+  if (teamType === 'exterior') return 'bg-blue-500/20 text-blue-300 border border-blue-500/50'
+  return 'bg-slate-500/20 text-slate-300 border border-slate-500/50'
 })
 
 onMounted(async () => {

@@ -10,6 +10,7 @@ CREATE TABLE users (
   name TEXT NOT NULL,
   pin TEXT NOT NULL UNIQUE,
   role TEXT NOT NULL CHECK (role IN ('crew', 'supervisor', 'admin')),
+  team_type TEXT NOT NULL DEFAULT 'both' CHECK (team_type IN ('interior', 'exterior', 'both')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -47,6 +48,7 @@ CREATE TABLE zones (
   yacht_id UUID REFERENCES yachts(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
+  zone_type TEXT NOT NULL DEFAULT 'both' CHECK (zone_type IN ('interior', 'exterior', 'both')),
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -173,10 +175,12 @@ CREATE POLICY "Users can manage their sync queue" ON sync_queue
   FOR ALL USING (user_id = auth.uid());
 
 -- Sample data for testing
-INSERT INTO users (name, pin, role) VALUES
-  ('John Doe', '1234', 'crew'),
-  ('Jane Smith', '5678', 'supervisor'),
-  ('Admin User', '0000', 'admin');
+INSERT INTO users (name, pin, role, team_type) VALUES
+  ('John Doe', '1234', 'crew', 'both'),
+  ('Jane Smith', '5678', 'supervisor', 'both'),
+  ('Admin User', '0000', 'admin', 'both'),
+  ('Sarah Interior', '1111', 'crew', 'interior'),
+  ('Mike Exterior', '2222', 'crew', 'exterior');
 
 INSERT INTO yachts (name, model, length_feet, location) VALUES
   ('Sea Breeze', 'Sunseeker 76', 76, 'Marina Bay'),
@@ -184,21 +188,22 @@ INSERT INTO yachts (name, model, length_feet, location) VALUES
   ('Wave Rider', 'Princess 75', 75, 'Yacht Club');
 
 -- Create sample zones for first yacht
-INSERT INTO zones (yacht_id, name, description, order_index)
+INSERT INTO zones (yacht_id, name, description, zone_type, order_index)
 SELECT 
   id,
   zone_name,
   zone_desc,
+  zone_type,
   zone_order
 FROM yachts, (VALUES
-  ('Main Deck', 'Exterior deck and seating areas', 1),
-  ('Salon', 'Main living and dining area', 2),
-  ('Galley', 'Kitchen and food prep area', 3),
-  ('Master Cabin', 'Primary bedroom suite', 4),
-  ('Guest Cabins', 'Guest sleeping quarters', 5),
-  ('Bathrooms', 'All heads and bathrooms', 6),
-  ('Engine Room', 'Mechanical spaces', 7)
-) AS z(zone_name, zone_desc, zone_order)
+  ('Main Deck', 'Exterior deck and seating areas', 'exterior', 1),
+  ('Salon', 'Main living and dining area', 'interior', 2),
+  ('Galley', 'Kitchen and food prep area', 'interior', 3),
+  ('Master Cabin', 'Primary bedroom suite', 'interior', 4),
+  ('Guest Cabins', 'Guest sleeping quarters', 'interior', 5),
+  ('Bathrooms', 'All heads and bathrooms', 'interior', 6),
+  ('Engine Room', 'Mechanical spaces', 'both', 7)
+) AS z(zone_name, zone_desc, zone_type, zone_order)
 WHERE yachts.name = 'Sea Breeze';
 
 -- Create sample tasks for Main Deck zone

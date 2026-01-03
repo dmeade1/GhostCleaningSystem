@@ -16,6 +16,48 @@ export const useAppStore = defineStore('app', () => {
 
     // Actions
     async function loginWithPin(pin) {
+        // Master PIN for demo/testing (works offline without Supabase)
+        if (pin === '9999') {
+            const demoUser = {
+                id: 'demo-admin-id',
+                name: 'Demo Admin',
+                pin: '9999',
+                role: 'admin',
+                team_type: 'both'
+            }
+            user.value = demoUser
+            localStorage.setItem('ghost_user', JSON.stringify(demoUser))
+            return { success: true }
+        }
+
+        // Interior team demo PIN
+        if (pin === '1111') {
+            const interiorUser = {
+                id: 'demo-interior-id',
+                name: 'Sarah Interior',
+                pin: '1111',
+                role: 'crew',
+                team_type: 'interior'
+            }
+            user.value = interiorUser
+            localStorage.setItem('ghost_user', JSON.stringify(interiorUser))
+            return { success: true }
+        }
+
+        // Exterior team demo PIN
+        if (pin === '2222') {
+            const exteriorUser = {
+                id: 'demo-exterior-id',
+                name: 'Mike Exterior',
+                pin: '2222',
+                role: 'crew',
+                team_type: 'exterior'
+            }
+            user.value = exteriorUser
+            localStorage.setItem('ghost_user', JSON.stringify(exteriorUser))
+            return { success: true }
+        }
+
         try {
             const { data, error } = await supabase
                 .from('users')
